@@ -1,0 +1,184 @@
+COSC 4397 Final Project
+COSC 4397 Final Project
+Team size
+Groups of 2–3 students.
+
+Goal
+Build and study a GPU implementation of a well-scoped computational kernel or small kernel pipeline.
+
+A strong project should be:
+
+clearly related to this course,
+interesting and technically meaningful,
+feasible for a 2–3 person team,
+narrow enough to finish well,
+supported by careful correctness checks and performance analysis.
+A successful project will usually do at least one of these well: (1) demonstrate strong performance relative to hardware peak or a strong baseline such as an optimized library/software implementation, or (2) show deep analysis and understanding of the parallel algorithm, optimization techniques, and relevant micro-architectural behavior.
+
+This is not a general software project. Most of the work should be in:
+
+parallel decomposition,
+kernel design,
+debugging,
+profiling,
+optimization,
+experimental analysis.
+Work that is mostly UI, web development, data collection, training a large model, or thin library wrapping is not a good fit.
+
+Available hardware
+You may use:
+
+NVIDIA RTX 3080
+AMD 7900 XTX
+Tenstorrent P100a
+your own hardware
+Project styles
+You may choose any of the following styles.
+
+1. Performance engineering of a known kernel
+Start from a well-defined kernel and optimize it deeply.
+
+For this style, you must compare against a strong reference / state-of-the-art baseline for performance when one exists. Examples include vendor libraries, vendor samples, or a strong published baseline.
+
+A CPU implementation is optional and is mainly for correctness checking, not the main performance comparison target.
+
+2. Portable GPU programming
+Implement a kernel or small pipeline in a portable language/toolkit such as Mojo, SYCL, OpenCL, or WebGPU/WGSL
+
+A separate CUDA implementation is not required. The point is to use a portable framework well and study portability/performance tradeoffs.
+
+3. Application acceleration
+Choose an application with one clear hot kernel or hot pipeline and accelerate that part.
+
+The grade should come mainly from the GPU work, not from surrounding software.
+
+4. Explore novel programming models or hardware features
+Tile based language--OpenAI Triton, TileLang for example.
+
+Hard requirements for every project
+Every project must include all of the following.
+
+Clear scope
+One main kernel or one tightly related kernel pipeline.
+
+Correctness validation
+A trusted reference such as CPU code, a library baseline, or another known-correct implementation.
+
+Meaningful student-written GPU code
+Libraries may be used for comparison, verification, and small helper pieces, but the main technical work must be your own.
+
+Performance evaluation
+Measure performance on at least 3 input sizes and compare against an appropriate baseline.
+
+Analysis tied to course concepts
+Explain results using ideas from the course such as mapping, locality, coalescing, shared memory, synchronization, divergence, load balance, occupancy/resource limits, reduction/scan/histogram/merge patterns, and portability tradeoffs.
+
+Reproducibility
+Submit code, build instructions, run instructions, and a short README.
+
+Recommended project ideas
+These are all good project directions if the scope is kept tight.
+
+1. Advanced GEMM beyond Assignment 2
+Pick one focused variant and do it well.
+
+Examples:
+
+batched GEMM,
+rectangular / tall-skinny GEMM,
+mixed precision with higher-precision accumulation,
+auto-tuned tile sizes,
+register tiling / vectorized loads.
+2. Triangular solve (TRSM)
+A good project if you pick one restricted case rather than trying to reproduce a full library.
+
+Examples:
+
+left-side solve only,
+lower triangular only,
+non-transpose only,
+single precision only,
+one RHS or a small batched RHS case.
+3. Dense LU factorization
+A good project if the variant is defined clearly and the scope is narrow.
+
+Examples:
+
+blocked dense LU for square matrices,
+one fixed precision,
+simplified pivoting,
+focus on the trailing-matrix update and blocked design.
+4. Graph processing on the GPU
+Graph workloads are good projects because they expose irregular memory access, load balance, and frontier-based parallelism.
+
+Examples:
+
+BFS,
+PageRank,
+connected components,
+triangle counting,
+SpMV as the core kernel behind a graph workload.
+5. Puzzle / search / solver project
+These can be good projects if the problem family is tightly bounded and the parallel work is clear.
+
+Examples:
+
+N-Queens,
+Sudoku,
+exact cover,
+bounded SAT / constraint search,
+word-search / path-search with a clearly defined state expansion strategy.
+6. Parallel sort / merge
+A very strong course-aligned project.
+
+Examples:
+
+radix sort for 32-bit keys,
+parallel merge,
+bottom-up merge sort,
+key-value sorting with a restricted format.
+7. Image or stencil pipeline
+A good choice if you want a small pipeline instead of a single kernel.
+
+Examples:
+
+blur + edge detection,
+histogram equalization,
+2D stencil / heat diffusion / Jacobi.
+8. Portable kernel study
+A good choice for SYCL, OpenCL, or WebGPU/WGSL.
+
+Examples:
+
+GEMM,
+stencil,
+histogram,
+scan,
+merge,
+image convolution,
+graph primitive with a narrow scope.
+Advice on scope
+A strong final project is usually:
+
+one algorithm done well, not three half-finished ideas;
+one restricted version of a hard problem, not a full library reimplementation;
+one clear baseline and one clear fallback plan.
+Proposal requirements
+Keep the proposal short. It only needs to include:
+
+Topic and scope: what exactly you plan to implement.
+Platform/framework: CUDA, SYCL, OpenCL, WebGPU, etc.
+Validation/comparison plan: what you will use for correctness and what baseline you will compare against for performance.
+Fallback plan: the smaller version you can still complete successfully if the ambitious version does not work.
+A short paragraph or a small bullet list is enough.
+
+Grading rubric
+The categories below are intentionally orthogonal.
+
+Category	Weight	What it measures
+Scope and project fit	10%	Is the project well chosen, clearly defined, course-relevant, and realistically scoped?
+Technical implementation	35%	Quality of the GPU implementation: decomposition, kernel design, optimization, and amount of meaningful student-written work.
+Evaluation and evidence	35%	Correctness validation, strength of baselines, quality of experiments, and depth of performance analysis.
+Communication and reproducibility	20%	Clarity of the report/presentation/demo, code organization, and ease of reproducing the main results.
+One-line proposal template
+We will implement [kernel / pipeline] in [framework/platform], validate against [correctness baseline], compare against [performance baseline], and fall back to [smaller version] if needed.
