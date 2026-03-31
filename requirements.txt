@@ -1,0 +1,3 @@
+# Use Python 3.10 or 3.11 for the least friction.
+# Install torch with the GPU-specific command in the setup guides first.
+triton
