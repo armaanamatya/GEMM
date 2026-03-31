@@ -37,7 +37,10 @@ def _matmul_kernel(
         a = tl.load(a_ptrs, mask=a_mask, other=0.0)
         b = tl.load(b_ptrs, mask=b_mask, other=0.0)
 
-        acc += tl.dot(a, b)
+        if USE_FP32_ACC:
+            acc += tl.dot(a, b)
+        else:
+            acc += tl.dot(a, b).to(tl.float16)
 
         offs_k += BLOCK_K
         a_ptrs += BLOCK_K * stride_ak
