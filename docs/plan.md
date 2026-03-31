@@ -28,14 +28,17 @@ The 8192 size is critical — it's where FP16 vs FP32 accumulation differences b
 
 ## Week 1: Implementation & Correctness (Mar 31 - Apr 6)
 
-### Person A — Core Kernel
+### Person A — Core Kernel (DONE)
 
-- [ ] Add configurable accumulator precision flag to the Triton GEMM kernel (`use_fp32_acc: bool`)
-  - FP32 mode: `acc = tl.zeros(..., dtype=tl.float32)` (current behavior)
+- [x] Add configurable accumulator precision flag to the Triton GEMM kernel (`USE_FP32_ACC: tl.constexpr`)
+  - FP32 mode: `acc = tl.zeros(..., dtype=tl.float32)` (default)
   - FP16 mode: `acc = tl.zeros(..., dtype=tl.float16)`
-- [ ] Pass correctness checks against `torch.matmul` for square matrices (512, 1024, 2048, 4096, 8192)
-- [ ] Handle non-power-of-2 and non-aligned shapes with proper masking (already done)
-- **Deliverable:** Working kernel with both accumulation modes + correctness logs
+  - Exposed as `use_fp32_acc: bool` in `triton_matmul()` wrapper
+- [x] Pass correctness checks against `torch.matmul` for square matrices (512, 1024, 2048, 4096, 8192)
+- [x] Handle non-power-of-2 and non-aligned shapes with proper masking
+- [x] Reorganize project into `kernels/`, `tests/`, `setup/`, `docs/` folder structure
+- [x] Update correctness tests for both accumulation modes with appropriate tolerances
+- **Deliverable:** Working kernel with both accumulation modes + correctness tests — **committed `9c57507`**
 
 ### Person B — Benchmarking Harness
 
