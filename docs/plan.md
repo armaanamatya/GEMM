@@ -2,7 +2,7 @@
 
 ## Mixed-Precision FP16 GEMM in Triton
 
-**Platform:** NVIDIA RTX 3080 | **Framework:** OpenAI Triton | **Team:** 3 people | **Timeline:** 3 weeks
+**Platform:** NVIDIA RTX 3080 + RTX 5060 Ti | **Framework:** OpenAI Triton | **Team:** 3 people | **Timeline:** 3 weeks
 
 ---
 
@@ -40,20 +40,23 @@ The 8192 size is critical — it's where FP16 vs FP32 accumulation differences b
 - [x] Update correctness tests for both accumulation modes with appropriate tolerances
 - **Deliverable:** Working kernel with both accumulation modes + correctness tests — **committed `9c57507`**
 
-### Person B — Benchmarking Harness
+### Person B — Benchmarking Harness (DONE)
 
-- [ ] Replace `time.perf_counter` with `triton.testing.do_bench` (warmup + median-of-N)
-- [ ] Implement TFLOPS calculation: `2 * M * N * K / time_seconds / 1e12`
-- [ ] Build automated sweep script over all 5 matrix sizes for both accumulation modes
-- [ ] Record cuBLAS baseline numbers (`torch.matmul` on FP16 CUDA tensors)
-- **Deliverable:** Benchmark scripts + initial performance numbers
+- [x] Replace `time.perf_counter` with `triton.testing.do_bench` (warmup=25, rep=100, median timing)
+- [x] Implement TFLOPS calculation: `2 * M * N * K / time_seconds / 1e12`
+- [x] Build automated sweep script over all 5 matrix sizes for both accumulation modes
+- [x] Record cuBLAS baseline numbers (`torch.matmul` on FP16 CUDA tensors)
+- **Deliverable:** `benchmarks/bench_gemm_sweep.py` + CSV output — **committed `347e1d1`**
+- **Key finding:** Triton reaches 87–98% of cuBLAS at sizes 512–4096, but drops to ~42% at 8192 (default 64×64×32 tiles). Autotuning in Week 2 should close this gap.
 
 ### Person C — Profiling Setup
 
 - [ ] Install and configure Nsight Compute (`ncu`)
 - [ ] Get baseline profiles of the Triton kernel and cuBLAS for at least one matrix size
 - [ ] Document achieved TFLOPS, memory bandwidth, and occupancy
-- [ ] Record GPU specs for the report (RTX 3080: 8704 CUDA cores, 10 GB GDDR6X, 29.77 TFLOPS FP16 peak, 760 GB/s bandwidth)
+- [ ] Record GPU specs for the report:
+  - RTX 3080: 8704 CUDA cores, 10 GB GDDR6X, 29.77 TFLOPS FP16 peak, 760 GB/s bandwidth (Ampere)
+  - RTX 5060 Ti: 4608 CUDA cores, 16 GB GDDR7, ~48 TFLOPS FP16 observed peak, 512 GB/s bandwidth (Blackwell)
 - **Deliverable:** Nsight profiles + baseline metrics document
 
 ---
@@ -62,15 +65,16 @@ The 8192 size is critical — it's where FP16 vs FP32 accumulation differences b
 
 ### Person A — Autotuning Sweep
 
-- [ ] Add `@triton.autotune` decorator with a config grid:
+- [x] Add `@triton.autotune` decorator with expanded config grid (192 configs) including GROUP_M:
   - `BLOCK_M`: [64, 128]
   - `BLOCK_N`: [64, 128, 256]
   - `BLOCK_K`: [32, 64]
+  - `GROUP_M`: [4, 8]
   - `num_warps`: [4, 8]
   - `num_stages`: [2, 3, 4]
-- [ ] Record best configurations per matrix size for both FP16 and FP32 accumulation
-- [ ] Optional stretch: add swizzled program IDs for better L2 cache locality
-- **Deliverable:** Autotune configs + sweep data (CSV/JSON)
+- [x] Record best configurations per matrix size for both FP16 and FP32 accumulation
+- [x] Optional stretch: add swizzled program IDs for better L2 cache locality
+- **Deliverable:** Autotuned kernel with swizzled program IDs + expanded config grid + documentation
 
 ### Person B — Numerical Error Analysis
 
@@ -153,7 +157,7 @@ If mixed-precision accumulation study proves too complex, fall back to:
 
 ## Tools & Resources
 
-- **Hardware:** NVIDIA RTX 3080 (8704 CUDA cores, 10 GB GDDR6X, 99 KB shared memory per SM)
+- **Hardware:** NVIDIA RTX 3080 (Ampere) + RTX 5060 Ti (Blackwell) — same Triton kernel runs on both
 - **Framework:** OpenAI Triton (Python-based tile language for GPU kernel authoring)
 - **Baseline:** PyTorch `torch.matmul` (cuBLAS-backed FP16 matmul)
 - **Profiling:** Nsight Compute (occupancy, register spills, memory throughput)

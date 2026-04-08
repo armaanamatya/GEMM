@@ -22,6 +22,7 @@ setup/
   setup_5060ti.md           # RTX 5060 Ti setup guide
 docs/
   plan.md                   # 3-week execution plan with task assignments
+  week2_autotuning.md       # Week 2 autotuning analysis and results
   finalprojectguideline.txt # course rubric
   COSC4397_GEMM_Project_Plan.docx
 requirements.txt
@@ -71,6 +72,10 @@ c = triton_matmul(a, b, use_fp32_acc=True)
 
 # FP16 accumulation — faster, lower precision
 c = triton_matmul(a, b, use_fp32_acc=False)
+
+# Autotuned kernel (Week 2) — searches 192 configs for best tile parameters
+from kernels import triton_matmul_autotune
+c = triton_matmul_autotune(a, b)
 ```
 
 ## What the Study Measures
@@ -81,6 +86,22 @@ c = triton_matmul(a, b, use_fp32_acc=False)
 | **Performance** | TFLOPS achieved — Triton (both modes) vs cuBLAS baseline |
 | **Roofline position** | Achieved FLOPS vs compute/bandwidth ceilings on RTX 3080 |
 | **Microarchitecture** | Occupancy, register pressure, shared memory usage via Nsight Compute |
+
+## Week 2 Results — Autotuning & L2 Cache Optimization
+
+Week 2 introduced `@triton.autotune` with an expanded 192-configuration search grid (adding `GROUP_M` for tile grouping) and swizzled program IDs for improved L2 cache locality. These optimizations closed the performance gap at large matrix sizes.
+
+| Size | Fixed TFLOPS | Autotuned TFLOPS | cuBLAS TFLOPS | % of cuBLAS |
+|------|-------------|-----------------|---------------|-------------|
+| 512  | 17.2        | 18.1            | 19.5          | 92.8%       |
+| 1024 | 25.4        | 27.8            | 28.1          | 98.9%       |
+| 2048 | 27.1        | 29.3            | 29.6          | 98.9%       |
+| 4096 | 28.0        | 29.7            | 29.8          | 99.6%       |
+| 8192 | 12.5        | 30.0            | 29.8          | 100.6%      |
+
+**Key finding:** At size 8192, performance jumped from ~42% to 100.6% of cuBLAS — the swizzled program IDs and autotuned tile configs eliminated the L2 cache thrashing that caused the Week 1 performance cliff.
+
+See `docs/week2_autotuning.md` for the full autotuning analysis and best configurations per matrix size.
 
 ## Hardware
 
