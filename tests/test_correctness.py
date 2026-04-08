@@ -3,7 +3,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 import torch
-from kernels import make_test_case, pytorch_matmul, triton_matmul
+from kernels import make_test_case, pytorch_matmul, triton_matmul, triton_matmul_autotune
 
 
 def check_case(m: int, n: int, k: int, use_fp32_acc: bool,
@@ -54,6 +54,53 @@ def main():
     if not all_ok:
         raise SystemExit("Correctness test FAILED.")
     print("\nAll correctness tests passed.")
+
+    # --- Autotuned kernel correctness tests ---
+    run_autotune_tests()
+
+
+def check_autotune_case(m: int, n: int, k: int, use_fp32_acc: bool,
+                        atol: float = 1e-2, rtol: float = 1e-2):
+    a, b = make_test_case(m, n, k)
+    out = triton_matmul_autotune(a, b, use_fp32_acc=use_fp32_acc)
+    ref = pytorch_matmul(a, b)
+
+    ok = torch.allclose(out, ref, atol=atol, rtol=rtol)
+    max_abs = (out - ref).abs().max().item()
+    mode = "FP32" if use_fp32_acc else "FP16"
+    print(f"[AUTOTUNE {mode} acc] [{m}x{k}] @ [{k}x{n}] -> ok={ok}, max_abs={max_abs:.6f}")
+    return ok
+
+
+def run_autotune_tests():
+    print("\n" + "=" * 50)
+    print("=== Autotuned kernel correctness tests ===")
+    print("=" * 50)
+
+    all_ok = True
+
+    # FP32 accumulation — square sizes
+    print("\n--- Autotuned: FP32 accumulation (square) ---")
+    for size in [512, 2048, 8192]:
+        if not check_autotune_case(size, size, size, use_fp32_acc=True, atol=1e-2, rtol=1e-2):
+            all_ok = False
+
+    # FP16 accumulation — square sizes (higher tolerance, error grows with size)
+    print("\n--- Autotuned: FP16 accumulation (square) ---")
+    for size in [512, 2048, 8192]:
+        if not check_autotune_case(size, size, size, use_fp32_acc=False, atol=4.0, rtol=1e-1):
+            all_ok = False
+
+    # Non-square case
+    print("\n--- Autotuned: non-square cases ---")
+    if not check_autotune_case(256, 1024, 512, use_fp32_acc=True, atol=1e-2, rtol=1e-2):
+        all_ok = False
+    if not check_autotune_case(256, 1024, 512, use_fp32_acc=False, atol=4.0, rtol=1e-1):
+        all_ok = False
+
+    if not all_ok:
+        raise SystemExit("Autotuned correctness test FAILED.")
+    print("\nAll autotuned correctness tests passed.")
 
 
 if __name__ == "__main__":
