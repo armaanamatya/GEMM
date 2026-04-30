@@ -1,3 +1,13 @@
 .venv/
 __pycache__/
 *.md
+generate_plots.py
+docs/   
+setup/
+xlsxcode/
+compiled_cache.db
+message (1).txt
+10x3080.sh
+10x5060ti.ps1
+10x5060ti.sh
+10xamd7900.sh

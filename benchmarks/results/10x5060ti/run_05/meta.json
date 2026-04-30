@@ -1,0 +1,22 @@
+{
+  "gpu_name": "5060ti",
+  "run_id": "05",
+  "cuda_device": "NVIDIA GeForce RTX 5060 Ti",
+  "vram_gb": 15.93,
+  "cuda_version": "12.8",
+  "torch_version": "2.11.0+cu128",
+  "python_version": "3.13.11",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "warmup": 25,
+  "rep": 100,
+  "amd_mode": false,
+  "sizes": [
+    512,
+    1024,
+    2048,
+    4096,
+    8192
+  ],
+  "timestamp_start": "2026-04-28T22:05:22",
+  "timestamp_end": "2026-04-28T22:07:42"
+}
