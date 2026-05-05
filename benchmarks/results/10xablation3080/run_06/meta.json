@@ -1,0 +1,21 @@
+{
+  "gpu_name": "3080",
+  "run_id": "06",
+  "cuda_device": "NVIDIA GeForce RTX 3080",
+  "vram_gb": 9.67,
+  "cuda_version": "12.6",
+  "torch_version": "2.6.0+cu126",
+  "python_version": "3.10.12",
+  "platform": "Linux-5.15.0-171-generic-x86_64-with-glibc2.35",
+  "warmup": 25,
+  "rep": 100,
+  "sizes": [
+    512,
+    1024,
+    2048,
+    4096,
+    8192
+  ],
+  "timestamp_start": "2026-04-30T00:40:39",
+  "timestamp_end": "2026-04-30T00:43:20"
+}

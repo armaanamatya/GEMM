@@ -1,0 +1,60 @@
+\documentclass[border=12pt]{standalone}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{boldline}
+
+\definecolor{hdrblue}{RGB}{31,73,125}
+\definecolor{rowgreen}{RGB}{198,239,206}
+\definecolor{rowred}{RGB}{255,199,206}
+\definecolor{rowgray}{RGB}{242,242,242}
+\definecolor{rowgold}{RGB}{255,242,204}
+\definecolor{deepgreen}{RGB}{169,208,142}
+
+\renewcommand{\arraystretch}{1.45}
+
+\begin{document}
+
+\begin{tabular}{
+  >{\bfseries}l
+  r r r
+  r
+}
+
+% ── header ──────────────────────────────────────────────────────────────
+\rowcolor{hdrblue}
+\textcolor{white}{\textbf{Optimization Stage}} &
+\textcolor{white}{\textbf{RTX 3080}} &
+\textcolor{white}{\textbf{RTX 5060 Ti}} &
+\textcolor{white}{\textbf{AMD 7900 XTX}} &
+\textcolor{white}{\textbf{Key Takeaway}} \\
+
+% ── rows ────────────────────────────────────────────────────────────────
+\rowcolor{rowgray}
+\normalfont Naive 64$\times$64            & 40.7 & 22.6 & 43.4  & Baseline \\
+
+\rowcolor{rowred}
+\normalfont Large tiles 128$\times$256    &  \textbf{4.7} & 22.0 & 12.5  & 8.6$\times$ collapse on Ampere \\
+
+\rowcolor{rowgray}
+\normalfont\quad + Shared-mem swizzle     &  5.1 & --- & 13.5  & $<$8\% gain (minor) \\
+
+\rowcolor{rowgreen}
+\normalfont\quad\quad + Async pipeline    & \textbf{58.8} & --- & \textbf{82.8}  & \textbf{11.5$\times$ on 3080, 6.1$\times$ on AMD} \\
+
+\rowcolor{deepgreen}
+\normalfont\quad\quad\quad + L2 swizzle + Autotune & \textbf{57.3} & \textbf{50.8} & \textbf{89.1}  & \textbf{Our full kernel} \\
+
+\midrule
+\rowcolor{rowgold}
+\normalfont cuBLAS / rocBLAS              & 58.9 & 47.7 & 91.3  & Vendor baseline \\
+
+\rowcolor{deepgreen}
+\normalfont \textbf{\% of vendor library} & \textbf{97.3\%} & \textbf{106.5\%} & \textbf{97.6\%} & \textbf{$\geq$97\% all GPUs} \\
+
+\end{tabular}
+
+\end{document}

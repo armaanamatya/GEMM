@@ -1,28 +1,4 @@
-"""
-Nsight Compute profiling helper.
-
-Designed to be called via ncu, not directly:
-
-  /opt/nvidia/nsight-compute/2026.1.0/ncu --set full \
-      --target-processes all \
-      -o benchmarks/results/profile_triton_fp32 \
-      python benchmarks/profile_ncu.py --mode triton_fp32
-
-  /opt/nvidia/nsight-compute/2026.1.0/ncu --set full \
-      --target-processes all \
-      -o benchmarks/results/profile_triton_fp16 \
-      python benchmarks/profile_ncu.py --mode triton_fp16
-
-  /opt/nvidia/nsight-compute/2026.1.0/ncu --set full \
-      --target-processes all \
-      -o benchmarks/results/profile_cublas \
-      python benchmarks/profile_ncu.py --mode cublas
-
-Modes:
-  triton_fp32  — Triton GEMM with FP32 accumulation
-  triton_fp16  — Triton GEMM with FP16 accumulation
-  cublas       — torch.matmul (cuBLAS baseline)
-"""
+# ncu profiling entrypoint
 from __future__ import annotations
 
 import argparse
@@ -46,7 +22,7 @@ def main() -> None:
     n = args.n
     a, b = make_test_case(n, n, n, device="cuda", dtype=torch.float16, seed=0)
 
-    # Warmup (not profiled if ncu uses --target-processes all with launch skip)
+    # warmup
     if args.mode == "triton_fp32":
         triton_matmul(a, b, use_fp32_acc=True)
     elif args.mode == "triton_fp16":
@@ -56,7 +32,7 @@ def main() -> None:
 
     torch.cuda.synchronize()
 
-    # Profiled run
+    # profiled
     if args.mode == "triton_fp32":
         c = triton_matmul(a, b, use_fp32_acc=True)
     elif args.mode == "triton_fp16":

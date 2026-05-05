@@ -1,0 +1,97 @@
+00:00:05  ============================================================
+00:00:05    GEMM Benchmark  |  GPU: amd  |  Run: 08
+00:00:05  ============================================================
+00:00:05    gpu_name: amd
+00:00:05    run_id: 08
+00:00:05    cuda_device: Radeon RX 7900 XTX
+00:00:05    vram_gb: 23.98
+00:00:05    cuda_version: N/A
+00:00:05    torch_version: 2.5.1+rocm6.2
+00:00:05    python_version: 3.12.3
+00:00:05    platform: Linux-6.17.0-20-generic-x86_64-with-glibc2.39
+00:00:05    warmup: 25
+00:00:05    rep: 100
+00:00:05    amd_mode: True
+00:00:05    sizes: [512, 1024, 2048, 4096, 8192]
+00:00:05    timestamp_start: 2026-04-30T00:00:05
+00:00:05  
+00:00:05  --- n = 512 ------------------------------
+00:00:05      cublas_fp16              n=  512 :    0.0179 ms    14.971 TFLOPS
+00:00:05      pytorch_fp32             n=  512 :    0.0448 ms     5.986 TFLOPS
+00:00:06      triton_fixed_fp32        n=  512 :    0.0259 ms    10.364 TFLOPS
+00:00:06      triton_fixed_fp16        n=  512 :    0.0213 ms    12.589 TFLOPS
+00:00:06        [autotuning triton acc=fp32 ...]
+00:00:21      triton_auto_fp32         n=  512 :    0.0185 ms    14.498 TFLOPS
+00:00:21        best_config_fp32 = {'BLOCK_M': 64, 'BLOCK_N': 64, 'BLOCK_K': 64, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:00:21        [autotuning triton acc=fp16 ...]
+00:00:21      triton_auto_fp16         n=  512 :    0.0194 ms    13.848 TFLOPS
+00:00:21        best_config_fp16 = {'BLOCK_M': 64, 'BLOCK_N': 64, 'BLOCK_K': 64, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:00:21      cutlass                  n=  512 : N/A (AMD/ROCm)
+00:00:21  --- n = 1024 ------------------------------
+00:00:22      cublas_fp16              n= 1024 :    0.0516 ms    41.603 TFLOPS
+00:00:22      pytorch_fp32             n= 1024 :    0.1266 ms    16.957 TFLOPS
+00:00:22      triton_fixed_fp32        n= 1024 :    0.0652 ms    32.961 TFLOPS
+00:00:22      triton_fixed_fp16        n= 1024 :    0.0604 ms    35.567 TFLOPS
+00:00:22        [autotuning triton acc=fp32 ...]
+00:00:37      triton_auto_fp32         n= 1024 :    0.0529 ms    40.618 TFLOPS
+00:00:37        best_config_fp32 = {'BLOCK_M': 64, 'BLOCK_N': 64, 'BLOCK_K': 64, 'GROUP_M': 4, 'num_warps': 4, 'num_stages': 2}
+00:00:37        [autotuning triton acc=fp16 ...]
+00:00:37      triton_auto_fp16         n= 1024 :    0.0546 ms    39.301 TFLOPS
+00:00:37        best_config_fp16 = {'BLOCK_M': 64, 'BLOCK_N': 64, 'BLOCK_K': 64, 'GROUP_M': 4, 'num_warps': 4, 'num_stages': 2}
+00:00:37      cutlass                  n= 1024 : N/A (AMD/ROCm)
+00:00:37  --- n = 2048 ------------------------------
+00:00:37      cublas_fp16              n= 2048 :    0.2100 ms    81.816 TFLOPS
+00:00:37      pytorch_fp32             n= 2048 :    0.7152 ms    24.022 TFLOPS
+00:00:37      triton_fixed_fp32        n= 2048 :    0.2989 ms    57.479 TFLOPS
+00:00:37      triton_fixed_fp16        n= 2048 :    0.3149 ms    54.558 TFLOPS
+00:00:37        [autotuning triton acc=fp32 ...]
+00:00:54      triton_auto_fp32         n= 2048 :    0.2285 ms    75.191 TFLOPS
+00:00:54        best_config_fp32 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:00:54        [autotuning triton acc=fp16 ...]
+00:00:54      triton_auto_fp16         n= 2048 :    0.8138 ms    21.112 TFLOPS
+00:00:54        best_config_fp16 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:00:54      cutlass                  n= 2048 : N/A (AMD/ROCm)
+00:00:54  --- n = 4096 ------------------------------
+00:00:54      cublas_fp16              n= 4096 :    1.4000 ms    98.169 TFLOPS
+00:00:54      pytorch_fp32             n= 4096 :    5.3563 ms    25.659 TFLOPS
+00:00:54      triton_fixed_fp32        n= 4096 :    2.3387 ms    58.766 TFLOPS
+00:00:55      triton_fixed_fp16        n= 4096 :    2.5113 ms    54.728 TFLOPS
+00:00:55        [autotuning triton acc=fp32 ...]
+00:01:14      triton_auto_fp32         n= 4096 :    1.5773 ms    87.138 TFLOPS
+00:01:14        best_config_fp32 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:01:14        [autotuning triton acc=fp16 ...]
+00:01:14      triton_auto_fp16         n= 4096 :    5.4766 ms    25.095 TFLOPS
+00:01:14        best_config_fp16 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 4, 'num_warps': 8, 'num_stages': 2}
+00:01:14      cutlass                  n= 4096 : N/A (AMD/ROCm)
+00:01:14  --- n = 8192 ------------------------------
+00:01:15      cublas_fp16              n= 8192 :   11.7830 ms    93.313 TFLOPS
+00:01:15      pytorch_fp32             n= 8192 :   44.7378 ms    24.577 TFLOPS
+00:01:15      triton_fixed_fp32        n= 8192 :   25.4192 ms    43.255 TFLOPS
+00:01:16      triton_fixed_fp16        n= 8192 :   28.0134 ms    39.250 TFLOPS
+00:01:16        [autotuning triton acc=fp32 ...]
+00:01:51      triton_auto_fp32         n= 8192 :   12.1143 ms    90.761 TFLOPS
+00:01:51        best_config_fp32 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 8, 'num_warps': 8, 'num_stages': 2}
+00:01:51        [autotuning triton acc=fp16 ...]
+00:01:51      triton_auto_fp16         n= 8192 :   42.1447 ms    26.089 TFLOPS
+00:01:51        best_config_fp16 = {'BLOCK_M': 128, 'BLOCK_N': 256, 'BLOCK_K': 32, 'GROUP_M': 8, 'num_warps': 8, 'num_stages': 2}
+00:01:51      cutlass                  n= 8192 : N/A (AMD/ROCm)
+00:01:51  
+00:01:51  ========================================================================
+00:01:51    Summary — TFLOPS per backend
+00:01:51  ========================================================================
+00:01:51  Backend                       512     1024     2048     4096     8192
+00:01:51  ------------------------------------------------------------------------
+00:01:51  cublas_fp16                 14.97    41.60    81.82    98.17    93.31
+00:01:51  pytorch_fp32                 5.99    16.96    24.02    25.66    24.58
+00:01:51  triton_fixed_fp32           10.36    32.96    57.48    58.77    43.26
+00:01:51  triton_fixed_fp16           12.59    35.57    54.56    54.73    39.25
+00:01:51  triton_auto_fp32            14.50    40.62    75.19    87.14    90.76
+00:01:51  triton_auto_fp16            13.85    39.30    21.11    25.10    26.09
+00:01:51  cutlass                       N/A      N/A      N/A      N/A      N/A
+00:01:51  ========================================================================
+00:01:51  
+Results  → benchmarks/results/10xamd/run_08/results.csv
+00:01:51  Metadata → benchmarks/results/10xamd/run_08/meta.json
+00:01:51  Log      → benchmarks/results/10xamd/run_08/run.log
+00:01:51  === Run complete ===
+

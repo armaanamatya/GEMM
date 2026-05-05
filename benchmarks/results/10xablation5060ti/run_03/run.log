@@ -1,0 +1,49 @@
+00:21:58  ============================================================
+00:21:58    Ablation Study  |  GPU: 5060ti  |  Run: 03
+00:21:58  ============================================================
+00:21:58    gpu_name: 5060ti
+00:21:58    run_id: 03
+00:21:58    cuda_device: NVIDIA GeForce RTX 5060 Ti
+00:21:58    vram_gb: 15.93
+00:21:58    cuda_version: 12.8
+00:21:58    torch_version: 2.11.0+cu128
+00:21:58    python_version: 3.13.11
+00:21:58    platform: Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35
+00:21:58    warmup: 25
+00:21:58    rep: 100
+00:21:58    sizes: [512, 1024, 2048, 4096, 8192]
+00:21:58    timestamp_start: 2026-04-30T00:21:58
+00:22:01      V1  naive_64x64        n=  512:    0.0161 ms    16.655 TFLOPS
+00:22:01      V1  naive_64x64        n= 1024:    0.0569 ms    37.730 TFLOPS
+00:22:01      V1  naive_64x64        n= 2048:    0.3684 ms    46.640 TFLOPS
+00:22:01      V1  naive_64x64        n= 4096:    2.9907 ms    45.955 TFLOPS
+00:22:02      V1  naive_64x64        n= 8192:   48.8487 ms    22.509 TFLOPS
+00:22:02      V2  tiles_128x256      n=  512:    0.0686 ms     3.911 TFLOPS
+00:22:02      V2  tiles_128x256      n= 1024:    0.1408 ms    15.247 TFLOPS
+00:22:13      V2  tiles_128x256      n= 2048:    0.8948 ms    19.200 TFLOPS
+00:22:02      V2  tiles_128x256      n= 4096:    6.7113 ms    20.479 TFLOPS
+00:22:02      V2  tiles_128x256      n= 8192:   51.2522 ms    21.453 TFLOPS
+00:22:02      V3  +swizzle           n=  512:    0.0854 ms     3.144 TFLOPS
+00:22:02      V3  +swizzle           n= 1024:    0.1754 ms    12.243 TFLOPS
+00:22:03      V3  +swizzle           n= 2048:    0.8909 ms    19.284 TFLOPS
+00:22:03      V3  +swizzle           n= 4096:    6.6168 ms    20.771 TFLOPS
+00:22:03      V3  +swizzle           n= 8192:   50.4434 ms    21.797 TFLOPS
+00:22:03      V4  +pipeline          n=  512:    0.0325 ms     8.262 TFLOPS
+00:22:03      V4  +pipeline          n= 1024:    0.0574 ms    37.395 TFLOPS
+00:22:04      V4  +pipeline          n= 2048:    0.4051 ms    42.412 TFLOPS
+00:22:04      V4  +pipeline          n= 4096:    2.9333 ms    46.855 TFLOPS
+00:22:04      V4  +pipeline          n= 8192:   22.5332 ms    48.795 TFLOPS
+00:22:23      V5  full_auto          n=  512:    0.0140 ms    19.221 TFLOPS
+00:22:42      V5  full_auto          n= 1024:    0.0566 ms    37.952 TFLOPS
+00:23:02      V5  full_auto          n= 2048:    0.3590 ms    47.859 TFLOPS
+00:23:27      V5  full_auto          n= 4096:    2.6812 ms    51.260 TFLOPS
+00:24:17      V5  full_auto          n= 8192:   21.4740 ms    51.202 TFLOPS
+00:24:17      cuBLAS                 n=  512:    0.0136 ms    19.787 TFLOPS
+00:24:18      cuBLAS                 n= 1024:    0.0577 ms    37.194 TFLOPS
+00:24:18      cuBLAS                 n= 2048:    0.3661 ms    46.923 TFLOPS
+00:24:18      cuBLAS                 n= 4096:    2.7151 ms    50.621 TFLOPS
+00:24:18      cuBLAS                 n= 8192:   22.4923 ms    48.884 TFLOPS
+00:24:18  Results  -> benchmarks/results/10xablation5060ti/run_03/results.csv
+00:24:18  Metadata -> benchmarks/results/10xablation5060ti/run_03/meta.json
+00:24:18  Log      -> benchmarks/results/10xablation5060ti/run_03/run.log
+00:24:18  === Run complete ===

@@ -1,16 +1,4 @@
-"""
-Autotuned GEMM benchmark sweep: compares autotuned Triton vs fixed-tile Triton vs cuBLAS.
-
-Triton's @autotune decorator tries all tile/warp/stage combinations and picks
-the fastest for each (M, N, K).  This script records:
-  - which config won
-  - autotuned TFLOPS vs fixed-tile TFLOPS vs cuBLAS
-  - the speedup from autotuning
-
-Run from repo root:
-  python benchmarks/bench_autotune_sweep.py
-  python benchmarks/bench_autotune_sweep.py --csv benchmarks/results/autotune_sweep.csv
-"""
+# autotuned vs fixed-tile vs cublas
 from __future__ import annotations
 
 import argparse
@@ -46,20 +34,19 @@ def bench_ms(fn, warmup: int = 25, rep: int = 100) -> float:
 def run_row(n: int, warmup: int, rep: int) -> dict:
     a, b = make_test_case(n, n, n, device="cuda", dtype=torch.float16, seed=0)
 
-    # --- Autotuned Triton (FP32 acc) ---
-    # First call triggers autotuning; subsequent calls use cached best config
+    # auto fp32
     ms_auto_fp32 = bench_ms(lambda: triton_matmul_autotune(a, b, use_fp32_acc=True), warmup, rep)
     best_fp32 = get_autotune_best_config(a, b, use_fp32_acc=True)
 
-    # --- Autotuned Triton (FP16 acc) ---
+    # auto fp16
     ms_auto_fp16 = bench_ms(lambda: triton_matmul_autotune(a, b, use_fp32_acc=False), warmup, rep)
     best_fp16 = get_autotune_best_config(a, b, use_fp32_acc=False)
 
-    # --- Fixed-tile Triton (64x64x32, original) ---
+    # fixed 64x64x32
     ms_fixed_fp32 = bench_ms(lambda: triton_matmul(a, b, use_fp32_acc=True), warmup, rep)
     ms_fixed_fp16 = bench_ms(lambda: triton_matmul(a, b, use_fp32_acc=False), warmup, rep)
 
-    # --- cuBLAS ---
+    # cublas
     ms_cublas = bench_ms(lambda: pytorch_matmul(a, b), warmup, rep)
 
     tf_auto_fp32 = tflops(n, n, n, ms_auto_fp32)
@@ -70,20 +57,15 @@ def run_row(n: int, warmup: int, rep: int) -> dict:
 
     return {
         "n": n,
-        # Autotuned results
         "tflops_auto_fp32": tf_auto_fp32,
         "tflops_auto_fp16": tf_auto_fp16,
-        # Fixed-tile results (baseline)
         "tflops_fixed_fp32": tf_fixed_fp32,
         "tflops_fixed_fp16": tf_fixed_fp16,
-        # cuBLAS
         "tflops_cublas": tf_cublas,
-        # Ratios
         "pct_cublas_auto_fp32": tf_auto_fp32 / tf_cublas * 100,
         "pct_cublas_auto_fp16": tf_auto_fp16 / tf_cublas * 100,
         "speedup_auto_vs_fixed_fp32": tf_auto_fp32 / tf_fixed_fp32,
         "speedup_auto_vs_fixed_fp16": tf_auto_fp16 / tf_fixed_fp16,
-        # Best config chosen
         "best_fp32_config": json.dumps(best_fp32),
         "best_fp16_config": json.dumps(best_fp16),
     }
@@ -140,7 +122,7 @@ def main() -> None:
             f"{row['best_fp32_config']}"
         )
 
-    # Summary
+    # summary
     print("\n" + "=" * 60)
     print("  Autotuning Summary")
     print("=" * 60)

@@ -1,19 +1,5 @@
 #!/usr/bin/env python3
-"""
-Unified GEMM benchmark runner.
-
-Backends: cublas_fp16, pytorch_fp32, triton_fixed_fp32, triton_fixed_fp16,
-          triton_auto_fp32, triton_auto_fp16, cutlass (NVIDIA only).
-
-Usage (from repo root):
-  python benchmarks/run_all.py \
-      --gpu-name 3080 --run-id 01 \
-      --output-dir benchmarks/results/10x3080/run_01
-
-AMD ROCm:
-  python benchmarks/run_all.py ... --amd
-  (cuBLAS becomes rocBLAS; CUTLASS is skipped)
-"""
+# unified gemm runner
 from __future__ import annotations
 
 import argparse
@@ -42,10 +28,7 @@ from kernels import (
 SQUARE_SIZES: tuple[int, ...] = (512, 1024, 2048, 4096, 8192)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
+# helpers
 def tflops(n: int, ms: float) -> float:
     return 2.0 * n ** 3 / (ms * 1e-3) / 1e12
 
@@ -62,19 +45,16 @@ def _log_result(log: logging.Logger, label: str, n: int,
         log.info(f"    {label:<24} n={n:5d} : N/A")
 
 
-# ---------------------------------------------------------------------------
-# Per-backend benchmark functions
-# ---------------------------------------------------------------------------
-
+# per-backend
 def _bench_cublas_fp16(a16: torch.Tensor, b16: torch.Tensor,
                        warmup: int, rep: int) -> float:
-    """torch.matmul fp16 → cuBLAS HGEMM on NVIDIA, rocBLAS on AMD."""
+    # cublas/rocblas hgemm
     return do_bench_ms(lambda: torch.matmul(a16, b16), warmup, rep)
 
 
 def _bench_pytorch_fp32(a32: torch.Tensor, b32: torch.Tensor,
                         warmup: int, rep: int) -> float:
-    """torch.matmul fp32 → TF32 on Ampere/Ada, plain SGEMM otherwise."""
+    # tf32 / sgemm
     return do_bench_ms(lambda: torch.matmul(a32, b32), warmup, rep)
 
 
@@ -95,12 +75,7 @@ def _bench_triton_auto(a16, b16, warmup, rep, fp32_acc: bool, log) -> tuple[floa
 
 
 def _bench_cutlass(a16, b16, warmup, rep, log) -> float | None:
-    """CUTLASS FP16 GEMM via the nvidia-cutlass Python package.
-
-    Install: pip install nvidia-cutlass
-    Returns median ms, or None if unavailable / incompatible.
-    Handles nvidia-cutlass 3.x and 4.x APIs.
-    """
+    # cutlass fp16 gemm, 3.x/4.x api
     cutlass = None
     for _import in ("cutlass", "nvidia.cutlass"):
         try:
@@ -120,7 +95,7 @@ def _bench_cutlass(a16, b16, warmup, rep, log) -> float | None:
     fn = None
     last_exc = None
 
-    # Style 1: cutlass 4.x — cutlass.op.Gemm with element_accumulator
+    # 4.x api
     if fn is None:
         for ctor_kwargs in (
             {"element": torch.float16, "layout": cutlass.LayoutType.RowMajor, "element_accumulator": torch.float32},
@@ -134,7 +109,6 @@ def _bench_cutlass(a16, b16, warmup, rep, log) -> float | None:
                 try:
                     plan = cutlass.op.Gemm(**ctor_kwargs)
                     result = plan.run(*run_args, **run_kwargs)
-                    # If run returns D, use the 3-arg form; otherwise 4-arg
                     if len(run_args) == 3:
                         fn = lambda: plan.run(a16, b16, C, **run_kwargs)  # noqa: B023
                     else:
@@ -147,7 +121,7 @@ def _bench_cutlass(a16, b16, warmup, rep, log) -> float | None:
             if fn is not None:
                 break
 
-    # Style 2: older cutlass.Gemm constructor
+    # 3.x api
     if fn is None:
         try:
             plan = cutlass.Gemm(A=a16, B=b16, C=C, D=D, alpha=1.0, beta=0.0)
@@ -169,10 +143,7 @@ def _bench_cutlass(a16, b16, warmup, rep, log) -> float | None:
         return None
 
 
-# ---------------------------------------------------------------------------
-# Per-size benchmark
-# ---------------------------------------------------------------------------
-
+# per-size
 def run_size(n: int, warmup: int, rep: int,
              log: logging.Logger, is_amd: bool, skip_cutlass: bool = False) -> dict:
     a16, b16 = make_test_case(n, n, n, device="cuda", dtype=torch.float16, seed=42)
@@ -183,41 +154,41 @@ def run_size(n: int, warmup: int, rep: int,
         row[key_ms] = ms
         row[key_tf] = tflops(n, ms) if ms is not None else None
 
-    # ---- cublas_fp16 (cuBLAS HGEMM / rocBLAS on AMD) ----
+    # cublas/rocblas fp16
     ms = _bench_cublas_fp16(a16, b16, warmup, rep)
     record("ms_cublas_fp16", "tflops_cublas_fp16", ms)
     _log_result(log, "cublas_fp16", n, ms, row["tflops_cublas_fp16"])
 
-    # ---- pytorch_fp32 (TF32 on Ampere+) ----
+    # pytorch fp32
     ms = _bench_pytorch_fp32(a32, b32, warmup, rep)
     record("ms_pytorch_fp32", "tflops_pytorch_fp32", ms)
     _log_result(log, "pytorch_fp32", n, ms, row["tflops_pytorch_fp32"])
 
-    # ---- triton_fixed_fp32 ----
+    # triton fixed fp32
     ms = _bench_triton_fixed(a16, b16, warmup, rep, fp32_acc=True)
     record("ms_triton_fixed_fp32", "tflops_triton_fixed_fp32", ms)
     _log_result(log, "triton_fixed_fp32", n, ms, row["tflops_triton_fixed_fp32"])
 
-    # ---- triton_fixed_fp16 ----
+    # triton fixed fp16
     ms = _bench_triton_fixed(a16, b16, warmup, rep, fp32_acc=False)
     record("ms_triton_fixed_fp16", "tflops_triton_fixed_fp16", ms)
     _log_result(log, "triton_fixed_fp16", n, ms, row["tflops_triton_fixed_fp16"])
 
-    # ---- triton_auto_fp32 ----
+    # triton auto fp32
     ms, cfg_fp32 = _bench_triton_auto(a16, b16, warmup, rep, fp32_acc=True, log=log)
     record("ms_triton_auto_fp32", "tflops_triton_auto_fp32", ms)
     row["best_config_fp32"] = json.dumps(cfg_fp32)
     _log_result(log, "triton_auto_fp32", n, ms, row["tflops_triton_auto_fp32"])
     log.info(f"      best_config_fp32 = {cfg_fp32}")
 
-    # ---- triton_auto_fp16 ----
+    # triton auto fp16
     ms, cfg_fp16 = _bench_triton_auto(a16, b16, warmup, rep, fp32_acc=False, log=log)
     record("ms_triton_auto_fp16", "tflops_triton_auto_fp16", ms)
     row["best_config_fp16"] = json.dumps(cfg_fp16)
     _log_result(log, "triton_auto_fp16", n, ms, row["tflops_triton_auto_fp16"])
     log.info(f"      best_config_fp16 = {cfg_fp16}")
 
-    # ---- cutlass (NVIDIA only, optional) ----
+    # cutlass
     if is_amd or skip_cutlass:
         row["ms_cutlass"] = None
         row["tflops_cutlass"] = None
@@ -231,10 +202,7 @@ def run_size(n: int, warmup: int, rep: int,
     return row
 
 
-# ---------------------------------------------------------------------------
-# CSV
-# ---------------------------------------------------------------------------
-
+# csv
 def write_csv(path: Path, rows: list[dict]) -> None:
     fieldnames = list(rows[0].keys())
     with open(path, "w", newline="", encoding="utf-8") as f:
@@ -244,10 +212,7 @@ def write_csv(path: Path, rows: list[dict]) -> None:
             writer.writerow(row)
 
 
-# ---------------------------------------------------------------------------
-# Summary table
-# ---------------------------------------------------------------------------
-
+# summary
 _BACKENDS = [
     ("cublas_fp16",       "ms_cublas_fp16",       "tflops_cublas_fp16"),
     ("pytorch_fp32",      "ms_pytorch_fp32",       "tflops_pytorch_fp32"),
@@ -276,10 +241,7 @@ def print_summary(log: logging.Logger, rows: list[dict]) -> None:
     log.info("=" * 72)
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
+# main
 def main() -> None:
     p = argparse.ArgumentParser(description="Unified GEMM benchmark runner")
     p.add_argument("--gpu-name",    required=True, help="GPU label, e.g. '3080'")
@@ -295,7 +257,6 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
 
     log_path = out / "run.log"
-    # Both file and stdout; file handler added manually to avoid root logger spam
     log = logging.getLogger("run_all")
     log.setLevel(logging.INFO)
     log.propagate = False

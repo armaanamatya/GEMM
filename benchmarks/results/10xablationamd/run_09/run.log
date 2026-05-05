@@ -1,0 +1,49 @@
+00:43:35  ============================================================
+00:43:35    Ablation Study  |  GPU: amd7900  |  Run: 09
+00:43:35  ============================================================
+00:43:35    gpu_name: amd7900
+00:43:35    run_id: 09
+00:43:35    cuda_device: Radeon RX 7900 XTX
+00:43:35    vram_gb: 23.98
+00:43:35    cuda_version: N/A
+00:43:35    torch_version: 2.5.1+rocm6.2
+00:43:35    python_version: 3.12.3
+00:43:35    platform: Linux-6.17.0-20-generic-x86_64-with-glibc2.39
+00:43:35    warmup: 25
+00:43:35    rep: 100
+00:43:35    sizes: [512, 1024, 2048, 4096, 8192]
+00:43:35    timestamp_start: 2026-04-30T00:43:35
+00:43:36      V1  naive_64x64        n=  512:    0.0300 ms     8.945 TFLOPS
+00:43:36      V1  naive_64x64        n= 1024:    0.0656 ms    32.711 TFLOPS
+00:43:36      V1  naive_64x64        n= 2048:    0.3138 ms    54.756 TFLOPS
+00:43:36      V1  naive_64x64        n= 4096:    2.2612 ms    60.782 TFLOPS
+00:43:36      V1  naive_64x64        n= 8192:   25.5529 ms    43.029 TFLOPS
+00:43:37      V2  tiles_128x256      n=  512:    0.1132 ms     2.372 TFLOPS
+00:43:37      V2  tiles_128x256      n= 1024:    0.2283 ms     9.408 TFLOPS
+00:43:37      V2  tiles_128x256      n= 2048:    1.3694 ms    12.545 TFLOPS
+00:43:37      V2  tiles_128x256      n= 4096:   10.6892 ms    12.858 TFLOPS
+00:43:38      V2  tiles_128x256      n= 8192:   85.8777 ms    12.803 TFLOPS
+00:43:38      V3  +swizzle           n=  512:    0.1105 ms     2.430 TFLOPS
+00:43:38      V3  +swizzle           n= 1024:    0.2198 ms     9.768 TFLOPS
+00:43:38      V3  +swizzle           n= 2048:    1.2750 ms    13.474 TFLOPS
+00:43:38      V3  +swizzle           n= 4096:   10.7140 ms    12.828 TFLOPS
+00:43:39      V3  +swizzle           n= 8192:   78.9556 ms    13.926 TFLOPS
+00:43:39      V4  +pipeline          n=  512:    0.0388 ms     6.916 TFLOPS
+00:43:39      V4  +pipeline          n= 1024:    0.0837 ms    25.649 TFLOPS
+00:43:39      V4  +pipeline          n= 2048:    0.2696 ms    63.735 TFLOPS
+00:43:39      V4  +pipeline          n= 4096:    1.7280 ms    79.535 TFLOPS
+00:43:40      V4  +pipeline          n= 8192:   13.4058 ms    82.017 TFLOPS
+00:43:55      V5  full_auto          n=  512:    0.0183 ms    14.637 TFLOPS
+00:44:10      V5  full_auto          n= 1024:    0.0543 ms    39.569 TFLOPS
+00:44:27      V5  full_auto          n= 2048:    0.2274 ms    75.549 TFLOPS
+00:44:46      V5  full_auto          n= 4096:    1.5718 ms    87.438 TFLOPS
+00:45:22      V5  full_auto          n= 8192:   12.1514 ms    90.485 TFLOPS
+00:45:22      cuBLAS                 n=  512:    0.0163 ms    16.462 TFLOPS
+00:45:22      cuBLAS                 n= 1024:    0.0506 ms    42.475 TFLOPS
+00:45:22      cuBLAS                 n= 2048:    0.2079 ms    82.624 TFLOPS
+00:45:22      cuBLAS                 n= 4096:    1.3939 ms    98.600 TFLOPS
+00:45:22      cuBLAS                 n= 8192:   11.5419 ms    95.262 TFLOPS
+00:45:22  Results  -> benchmarks/results/10xablationamd/run_09/results.csv
+00:45:22  Metadata -> benchmarks/results/10xablationamd/run_09/meta.json
+00:45:22  Log      -> benchmarks/results/10xablationamd/run_09/run.log
+00:45:22  === Run complete ===

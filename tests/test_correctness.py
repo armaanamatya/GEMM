@@ -20,7 +20,7 @@ def check_case(m: int, n: int, k: int, use_fp32_acc: bool,
 
 
 def main():
-    # Square sizes required by the plan
+    # square
     square_sizes = [
         (512, 512, 512),
         (1024, 1024, 1024),
@@ -29,7 +29,7 @@ def main():
         (8192, 8192, 8192),
     ]
 
-    # Non-aligned sizes to verify masking
+    # non-aligned (mask check)
     non_aligned_sizes = [
         (127, 193, 91),
         (255, 129, 257),
@@ -42,10 +42,7 @@ def main():
         if not check_case(m, n, k, use_fp32_acc=True):
             all_ok = False
 
-    # FP16 accumulation has higher error that grows with matrix size.
-    # This is expected and is the core of our mixed-precision study.
-    # Tolerances are relaxed accordingly — the error analysis in Week 2
-    # will quantify and explain this scaling.
+    # fp16 acc: relaxed tol
     print("\n=== FP16 accumulation mode ===")
     for m, n, k in square_sizes + non_aligned_sizes:
         if not check_case(m, n, k, use_fp32_acc=False, atol=5.0, rtol=1e-1):
@@ -55,7 +52,7 @@ def main():
         raise SystemExit("Correctness test FAILED.")
     print("\nAll correctness tests passed.")
 
-    # --- Autotuned kernel correctness tests ---
+    # autotune
     run_autotune_tests()
 
 
@@ -79,19 +76,19 @@ def run_autotune_tests():
 
     all_ok = True
 
-    # FP32 accumulation — square sizes
+    # fp32 acc square
     print("\n--- Autotuned: FP32 accumulation (square) ---")
     for size in [512, 2048, 8192]:
         if not check_autotune_case(size, size, size, use_fp32_acc=True, atol=1e-2, rtol=1e-2):
             all_ok = False
 
-    # FP16 accumulation — square sizes (higher tolerance, error grows with size)
+    # fp16 acc square
     print("\n--- Autotuned: FP16 accumulation (square) ---")
     for size in [512, 2048, 8192]:
         if not check_autotune_case(size, size, size, use_fp32_acc=False, atol=4.0, rtol=1e-1):
             all_ok = False
 
-    # Non-square case
+    # non-square
     print("\n--- Autotuned: non-square cases ---")
     if not check_autotune_case(256, 1024, 512, use_fp32_acc=True, atol=1e-2, rtol=1e-2):
         all_ok = False

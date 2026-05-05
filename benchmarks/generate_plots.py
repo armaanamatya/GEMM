@@ -1,15 +1,4 @@
-"""
-Generate publication-quality figures from 10x benchmark runs.
-
-Figures produced (PDF + PNG):
-  fig1_performance        -- TFLOPS vs N, two panels (5060 Ti / 3080), shaded ±1σ
-  fig2_vs_cublas          -- Normalized to cuBLAS %, highlights where Triton wins
-  fig3_autotune_necessity -- Fixed vs autotuned speedup bar chart with annotations
-  fig4_cutlass_ramp       -- CUTLASS JIT cold-start on RTX 3080 (linear + log)
-
-Usage (from repo root):
-  python benchmarks/generate_plots.py [--show]
-"""
+# plot generator
 from __future__ import annotations
 
 import argparse
@@ -26,25 +15,20 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import numpy as np
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
+# constants
 SIZES   = [512, 1024, 2048, 4096, 8192]
 OUT_DIR = Path("benchmarks/results/plots")
 
-# Palette: colorblind-safe, prints well in greyscale via line-style variety
 PAL = {
-    "cublas":            "#1B2A4A",   # deep navy   — authoritative reference
-    "triton_auto_fp32":  "#C0392B",   # bold red    — main contribution
-    "triton_auto_fp16":  "#E97B72",   # soft red    — fp16 variant
-    "triton_fixed_fp32": "#2471A3",   # clear blue  — naive baseline
-    "triton_fixed_fp16": "#7FB3D3",   # light blue
-    "cutlass":           "#1E8449",   # forest green
-    "pytorch_fp32":      "#AAB7B8",   # neutral grey
+    "cublas":            "#1B2A4A",
+    "triton_auto_fp32":  "#C0392B",
+    "triton_auto_fp16":  "#E97B72",
+    "triton_fixed_fp32": "#2471A3",
+    "triton_fixed_fp16": "#7FB3D3",
+    "cutlass":           "#1E8449",
+    "pytorch_fp32":      "#AAB7B8",
 }
 
-# (linestyle, linewidth)
 LSW = {
     "cublas":            ("-",  2.5),
     "triton_auto_fp32":  ("-",  2.2),
@@ -66,7 +50,7 @@ MARKERS = {
 }
 
 LEGEND_LABELS = {
-    "cublas":            "cuBLAS FP16 (reference)",
+    "cublas":            "cuBLAS / hipBLAS FP16 (reference)",
     "triton_auto_fp32":  "Triton Autotuned  FP32-acc  ← our result",
     "triton_auto_fp16":  "Triton Autotuned  FP16-acc",
     "triton_fixed_fp32": "Triton Fixed      FP32-acc  (no swizzle)",
@@ -75,7 +59,6 @@ LEGEND_LABELS = {
     "pytorch_fp32":      "PyTorch FP32 (TF32)",
 }
 
-# Maps backend key → CSV column name
 TFLOPS_COL = {
     "cublas":            "tflops_cublas_fp16",
     "triton_auto_fp32":  "tflops_triton_auto_fp32",
@@ -89,12 +72,8 @@ TFLOPS_COL = {
 XTICKS  = SIZES
 XLABELS = ["512", "1K", "2K", "4K", "8K"]
 
-# ---------------------------------------------------------------------------
-# Data loading
-# ---------------------------------------------------------------------------
-
+# load
 def load_gpu(gpu: str) -> dict[str, dict[int, list[float]]]:
-    """Load all 10 run CSVs for a GPU into {backend: {n: [tflops, ...]}}."""
     pattern = f"benchmarks/results/10x{gpu}/run_*/results.csv"
     files = sorted(glob.glob(pattern))
     if not files:
@@ -116,7 +95,7 @@ def load_gpu(gpu: str) -> dict[str, dict[int, list[float]]]:
 
 
 def _ms(data: dict, bk: str, n: int) -> tuple[float, float]:
-    """Return (mean, std) for a backend+size; (nan, nan) if no data."""
+    # mean, std
     vals = data.get(bk, {}).get(n, [])
     if not vals:
         return float("nan"), float("nan")
@@ -125,10 +104,7 @@ def _ms(data: dict, bk: str, n: int) -> tuple[float, float]:
     return m, s
 
 
-# ---------------------------------------------------------------------------
-# Style helpers
-# ---------------------------------------------------------------------------
-
+# style
 def _setup_style() -> None:
     for style in ("seaborn-v0_8-whitegrid", "seaborn-whitegrid"):
         try:
@@ -216,22 +192,20 @@ def _save(fig: plt.Figure, name: str, show: bool) -> None:
     plt.close(fig)
 
 
-# ---------------------------------------------------------------------------
-# Figure 1 — TFLOPS vs N, both GPUs
-# ---------------------------------------------------------------------------
-
-def fig1_performance(d5: dict, d3: dict, show: bool = False) -> None:
+# fig1: tflops vs N
+def fig1_performance(d5: dict, d3: dict, damd: dict, show: bool = False) -> None:
     _setup_style()
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.3), sharey=False)
+    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.3), sharey=False)
 
     GPU_PANELS = [
-        ("(a)  RTX 5060 Ti", d5, False),
-        ("(b)  RTX 3080",    d3, True),
+        ("(a)  RTX 5060 Ti",     d5,   False, "5060ti"),
+        ("(b)  RTX 3080",        d3,   True,  "3080"),
+        ("(c)  RX 7900 XTX",     damd, False, "amd"),
     ]
     SHOW = ["cublas", "triton_auto_fp32", "triton_auto_fp16",
             "triton_fixed_fp32", "pytorch_fp32"]
 
-    for ax, (title, data, show_cutlass) in zip(axes, GPU_PANELS):
+    for ax, (title, data, show_cutlass, gpu_key) in zip(axes, GPU_PANELS):
         if not data:
             ax.text(0.5, 0.5, "No data", ha="center", transform=ax.transAxes)
             ax.set_title(title, loc="left", fontweight="bold")
@@ -244,12 +218,12 @@ def fig1_performance(d5: dict, d3: dict, show: bool = False) -> None:
 
         _size_axis(ax)
         ax.set_title(title, loc="left", fontweight="bold")
-        n_runs = len(glob.glob(f"benchmarks/results/10x{'5060ti' if 'Ti' in title else '3080'}/run_*/results.csv"))
+        n_runs = len(glob.glob(f"benchmarks/results/10x{gpu_key}/run_*/results.csv"))
         ax.text(0.97, 0.03, f"n = {n_runs} runs  |  shading = ±1σ",
                 transform=ax.transAxes, fontsize=6.5, ha="right", va="bottom",
                 color="#888888")
 
-        # Small value labels at N=8192 endpoint
+        # endpoint labels
         for bk in ("triton_auto_fp32", "cublas"):
             m, _ = _ms(data, bk, 8192)
             if not math.isnan(m):
@@ -258,31 +232,38 @@ def fig1_performance(d5: dict, d3: dict, show: bool = False) -> None:
                             fontsize=6.5, color=PAL[bk], va="center",
                             fontweight="bold")
 
-    # Shared legend below both panels
+        # amd note
+        if gpu_key == "amd":
+            ax.text(0.03, 0.97, "cuBLAS = hipBLAS on RDNA3",
+                    transform=ax.transAxes, fontsize=6, ha="left", va="top",
+                    color="#888888", style="italic")
+
+    # legend
     handles, labels = [], []
     seen: set[str] = set()
     for ax in axes:
         for h, l in zip(*ax.get_legend_handles_labels()):
             if l not in seen:
                 handles.append(h); labels.append(l); seen.add(l)
-    fig.legend(handles, labels, loc="lower center", ncol=3,
+    fig.legend(handles, labels, loc="lower center", ncol=4,
                bbox_to_anchor=(0.5, -0.22), frameon=True)
 
-    fig.suptitle("FP16 GEMM Throughput — Triton vs cuBLAS vs CUTLASS",
+    fig.suptitle("FP16 GEMM Throughput — Triton vs cuBLAS/hipBLAS vs CUTLASS",
                  fontsize=10, y=1.02)
     fig.tight_layout()
     _save(fig, "fig1_performance", show)
 
 
-# ---------------------------------------------------------------------------
-# Figure 2 — % of cuBLAS
-# ---------------------------------------------------------------------------
-
-def fig2_vs_cublas(d5: dict, d3: dict, show: bool = False) -> None:
+# fig2: %cublas
+def fig2_vs_cublas(d5: dict, d3: dict, damd: dict, show: bool = False) -> None:
     _setup_style()
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.1), sharey=True)
+    fig, axes = plt.subplots(1, 3, figsize=(10.8, 3.1), sharey=True)
 
-    GPU_PANELS = [("(a)  RTX 5060 Ti", d5), ("(b)  RTX 3080", d3)]
+    GPU_PANELS = [
+        ("(a)  RTX 5060 Ti",  d5),
+        ("(b)  RTX 3080",     d3),
+        ("(c)  RX 7900 XTX",  damd),
+    ]
     SHOW = ["triton_auto_fp32", "triton_auto_fp16", "triton_fixed_fp32"]
 
     for ax, (title, data) in zip(axes, GPU_PANELS):
@@ -290,10 +271,10 @@ def fig2_vs_cublas(d5: dict, d3: dict, show: bool = False) -> None:
             ax.text(0.5, 0.5, "No data", ha="center", transform=ax.transAxes)
             continue
 
-        # Green band marks "beating cuBLAS"
+        ref_label = "hipBLAS = 100 %" if "XTX" in title else "cuBLAS  =  100 %"
         ax.axhspan(100, 118, color="#D5F5E3", alpha=0.45, zorder=0)
         ax.axhline(100, color=PAL["cublas"], lw=1.6, ls="--",
-                   label="cuBLAS  =  100 %", zorder=3)
+                   label=ref_label, zorder=3)
 
         for bk in SHOW:
             xs, ys, es = [], [], []
@@ -315,31 +296,28 @@ def fig2_vs_cublas(d5: dict, d3: dict, show: bool = False) -> None:
             ax.fill_between(xs, ys - es, ys + es, color=PAL[bk],
                             alpha=0.13, zorder=2)
 
-        _size_axis(ax, ylabel="Throughput relative to cuBLAS (%)", ymin=None)
-        ax.set_ylim(25, 118)
+        ref_name = "hipBLAS" if "XTX" in title else "cuBLAS"
+        _size_axis(ax, ylabel=f"Throughput relative to {ref_name} (%)", ymin=None)
+        ax.set_ylim(15, 118)
         ax.yaxis.set_major_formatter(mticker.PercentFormatter(decimals=0))
         ax.set_title(title, loc="left", fontweight="bold")
         ax.legend(loc="lower right", fontsize=7)
 
-        # Label the "beats cuBLAS" shading
-        ax.text(520, 108, "  beats cuBLAS", fontsize=6.5,
+        ax.text(520, 108, f"  beats {ref_name}", fontsize=6.5,
                 color="#1E8449", va="center")
 
-    fig.suptitle("Triton GEMM Performance Relative to cuBLAS  (shading = ±1σ propagated error)",
+    fig.suptitle("Triton GEMM Performance Relative to Vendor Library  (shading = ±1σ propagated error)",
                  fontsize=9.5, y=1.02)
     fig.tight_layout()
     _save(fig, "fig2_vs_cublas", show)
 
 
-# ---------------------------------------------------------------------------
-# Figure 3 — Why autotuning matters (grouped bars)
-# ---------------------------------------------------------------------------
-
-def fig3_autotune_necessity(d5: dict, d3: dict, show: bool = False) -> None:
+# fig3: autotune bars
+def fig3_autotune_necessity(d5: dict, d3: dict, damd: dict, show: bool = False) -> None:
     _setup_style()
-    fig, ax = plt.subplots(figsize=(6.8, 3.6))
+    fig, ax = plt.subplots(figsize=(9.6, 3.6))
 
-    gpus   = [("5060 Ti", d5), ("3080", d3)]
+    gpus   = [("5060 Ti", d5), ("3080", d3), ("7900 XTX", damd)]
     ns_show = [4096, 8192]
     BAR_KEYS = [
         ("triton_fixed_fp32", "Fixed tiling\n(64×64, no swizzle)"),
@@ -388,11 +366,14 @@ def fig3_autotune_necessity(d5: dict, d3: dict, show: bool = False) -> None:
     ax.set_xticks(centers)
     ax.set_xticklabels(group_labels, fontsize=8)
     ax.set_ylabel("Throughput (TFLOPS)")
-    ax.set_ylim(0, max(
-        (_ms(d3, "cutlass",  8192)[0] or 0),
-        (_ms(d3, "triton_auto_fp32", 8192)[0] or 0),
+    all_peaks = [
+        _ms(d3,   "cutlass",          8192)[0] or 0,
+        _ms(d3,   "triton_auto_fp32", 8192)[0] or 0,
+        _ms(damd, "triton_auto_fp32", 8192)[0] or 0,
+        _ms(damd, "cublas",           8192)[0] or 0,
         60,
-    ) * 1.22)
+    ]
+    ax.set_ylim(0, max(all_peaks) * 1.22)
     ax.set_title(
         "Autotuning Necessity: Fixed Tiling vs Autotuned Triton vs cuBLAS\n"
         "Annotated ratio = autotuned ÷ fixed throughput",
@@ -480,24 +461,26 @@ def main() -> None:
     args = ap.parse_args()
 
     print("Loading 10x benchmark data …")
-    d5 = load_gpu("5060ti")
-    d3 = load_gpu("3080")
+    d5   = load_gpu("5060ti")
+    d3   = load_gpu("3080")
+    damd = load_gpu("amd")
 
-    if not d5 and not d3:
+    if not d5 and not d3 and not damd:
         sys.exit("ERROR: No CSVs found. Run from the project root.")
 
-    runs5 = len(glob.glob("benchmarks/results/10x5060ti/run_*/results.csv"))
-    runs3 = len(glob.glob("benchmarks/results/10x3080/run_*/results.csv"))
-    print(f"  5060 Ti: {runs5} runs     3080: {runs3} runs")
+    runs5   = len(glob.glob("benchmarks/results/10x5060ti/run_*/results.csv"))
+    runs3   = len(glob.glob("benchmarks/results/10x3080/run_*/results.csv"))
+    runs_amd = len(glob.glob("benchmarks/results/10xamd/run_*/results.csv"))
+    print(f"  5060 Ti: {runs5} runs     3080: {runs3} runs     AMD: {runs_amd} runs")
 
     print("\nGenerating figures …")
-    fig1_performance(d5, d3, args.show)
-    fig2_vs_cublas(d5, d3, args.show)
-    fig3_autotune_necessity(d5, d3, args.show)
+    fig1_performance(d5, d3, damd, args.show)
+    fig2_vs_cublas(d5, d3, damd, args.show)
+    fig3_autotune_necessity(d5, d3, damd, args.show)
     if d3:
         fig4_cutlass_ramp(d3, args.show)
 
-    print(f"\nAll figures → {OUT_DIR}/")
+    print(f"\nAll figures -> {OUT_DIR}/")
 
 
 if __name__ == "__main__":

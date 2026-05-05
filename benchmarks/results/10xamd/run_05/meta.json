@@ -1,0 +1,22 @@
+{
+  "gpu_name": "amd",
+  "run_id": "05",
+  "cuda_device": "Radeon RX 7900 XTX",
+  "vram_gb": 23.98,
+  "cuda_version": "N/A",
+  "torch_version": "2.5.1+rocm6.2",
+  "python_version": "3.12.3",
+  "platform": "Linux-6.17.0-20-generic-x86_64-with-glibc2.39",
+  "warmup": 25,
+  "rep": 100,
+  "amd_mode": true,
+  "sizes": [
+    512,
+    1024,
+    2048,
+    4096,
+    8192
+  ],
+  "timestamp_start": "2026-04-29T23:54:34",
+  "timestamp_end": "2026-04-29T23:56:21"
+}

@@ -1,11 +1,4 @@
-"""
-Square GEMM performance sweep: Triton (FP32 / FP16 accumulation) vs cuBLAS (torch.matmul).
-
-Uses triton.testing.do_bench for warmup + median timing. Run from repo root:
-
-  python benchmarks/bench_gemm_sweep.py
-  python benchmarks/bench_gemm_sweep.py --csv benchmarks/results/sweep.csv
-"""
+# square gemm sweep: triton vs cublas
 from __future__ import annotations
 
 import argparse
@@ -34,7 +27,7 @@ def tflops_from_seconds(m: int, n: int, k: int, seconds: float) -> float:
 
 
 def bench_median_ms(fn, warmup: int, rep: int) -> float:
-    """Median wall time in ms for one call to ``fn`` (CUDA sync included)."""
+    # median ms
     return float(do_bench(fn, warmup=warmup, rep=rep))
 
 

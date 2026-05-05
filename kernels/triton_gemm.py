@@ -3,9 +3,7 @@ import triton
 import triton.language as tl
 
 
-# ── Autotuning configuration grid ────────────────────────────────────────────
-# Triton will benchmark every combination and cache the fastest per matrix size.
-
+# autotune grid
 def _autotune_configs():
     configs = []
     for BLOCK_M in [64, 128, 256]:
@@ -43,7 +41,7 @@ def _matmul_kernel_autotune(
     BLOCK_K: tl.constexpr,
     GROUP_M: tl.constexpr,
 ):
-    # Swizzled program IDs for L2 cache locality
+    # swizzle for L2
     pid = tl.program_id(axis=0)
     num_pid_m = tl.cdiv(M, BLOCK_M)
     num_pid_n = tl.cdiv(N, BLOCK_N)
@@ -89,8 +87,7 @@ def _matmul_kernel_autotune(
     tl.store(c_ptrs, c, mask=c_mask)
 
 
-# ── Original kernel (fixed tile sizes, no autotuning) ────────────────────────
-
+# fixed-tile kernel
 @triton.jit
 def _matmul_kernel(
     a_ptr, b_ptr, c_ptr,
@@ -146,14 +143,7 @@ def triton_matmul(a: torch.Tensor, b: torch.Tensor,
                   block_m: int = 64,
                   block_n: int = 64,
                   block_k: int = 32) -> torch.Tensor:
-    """
-    Tiled FP16 GEMM with configurable accumulator precision.
-    - A: [M, K] fp16
-    - B: [K, N] fp16
-    - C: [M, N] fp16
-    - use_fp32_acc: if True, accumulate in FP32 (higher precision);
-                    if False, accumulate in FP16 (faster, lower precision).
-    """
+    # tiled fp16 gemm, MxK @ KxN
     if a.ndim != 2 or b.ndim != 2:
         raise ValueError("A and B must be 2D tensors.")
     if a.shape[1] != b.shape[0]:
@@ -187,10 +177,7 @@ def triton_matmul(a: torch.Tensor, b: torch.Tensor,
 
 def triton_matmul_autotune(a: torch.Tensor, b: torch.Tensor,
                            use_fp32_acc: bool = True) -> torch.Tensor:
-    """
-    Autotuned tiled FP16 GEMM — Triton picks the best tile sizes,
-    warp count, and pipeline stages for each (M, N, K) combination.
-    """
+    # autotuned fp16 gemm
     if a.ndim != 2 or b.ndim != 2:
         raise ValueError("A and B must be 2D tensors.")
     if a.shape[1] != b.shape[0]:
@@ -221,13 +208,8 @@ def triton_matmul_autotune(a: torch.Tensor, b: torch.Tensor,
 
 def get_autotune_best_config(a: torch.Tensor, b: torch.Tensor,
                               use_fp32_acc: bool = True) -> dict:
-    """
-    Run autotuning and return the best config chosen by Triton.
-    Useful for recording which tile sizes won for each matrix size.
-    """
-    # Trigger autotuning by running once
+    # best autotune config
     triton_matmul_autotune(a, b, use_fp32_acc=use_fp32_acc)
-    # Read back the best config
     best = _matmul_kernel_autotune.best_config
     return {
         "BLOCK_M": best.kwargs["BLOCK_M"],

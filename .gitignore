@@ -1,8 +1,8 @@
 .venv/
 __pycache__/
 *.md
-generate_plots.py
-docs/   
+!README.md
+docs/
 setup/
 xlsxcode/
 compiled_cache.db
@@ -11,3 +11,8 @@ message (1).txt
 10x5060ti.ps1
 10x5060ti.sh
 10xamd7900.sh
+benchmarks/results/3080run/
+benchmarks/results/5060tirun/
+benchmarks/results/amdrun/
+.local-md-backup-*/
+_rewrite_msgs.py
